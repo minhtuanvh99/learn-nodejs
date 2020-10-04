@@ -14,7 +14,6 @@ connect.then((db) => {
   })
     .then((dish) => {
       console.log(dish);
-
       return Dishes.findByIdAndUpdate(
         dish._id,
         {
