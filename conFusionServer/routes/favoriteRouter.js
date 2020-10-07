@@ -122,31 +122,23 @@ favoriteRouter
     res.sendStatus(200);
   })
   .get(cors.cors, authenticate.verifyUser, (req, res, next) => {
-    Favorites.find({})
-      .populate("user")
-      .populate("dishes")
+    Favorites.findOne({ user: req.user._id })
       .then(
-        (fav) => {
-          if (fav) {
-            const fav = fav.filter(
-              (fav) => fav.user._id.toString() === req.user.id.toString()
-            )[0];
-            const dish = fav.dishes.filter(
-              (dish) => dish.id === req.params.dishId
-            )[0];
-            if (dish) {
+        (favorites) => {
+          if (!favorites) {
+            res.statusCode = 200;
+            res.setHeader("Content-Type", "application/json");
+            return res.json({ exists: false, favorites: favorites });
+          } else {
+            if (favorites.dishes.indexOf(req.params.dishId) < 0) {
               res.statusCode = 200;
               res.setHeader("Content-Type", "application/json");
-              res.json(dish);
+              return res.json({ exists: false, favorites: favorites });
             } else {
-              var err = new Error("You do not have dish " + req.params.dishId);
-              err.status = 404;
-              return next(err);
+              res.statusCode = 200;
+              res.setHeader("Content-Type", "application/json");
+              return res.json({ exists: true, favorites: favorites });
             }
-          } else {
-            var err = new Error("You do not have any favorites");
-            err.status = 404;
-            return next(err);
           }
         },
         (err) => next(err)
